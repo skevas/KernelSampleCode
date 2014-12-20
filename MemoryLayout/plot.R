@@ -1,4 +1,4 @@
-kernelMemoryPlot <- function(xValues) {
+kernelMemoryPlot <- function(linesToPlot,optionalUpperBound) {
 	lowerBound <- c(
 	0xffffffffffe00000,
 	0xffffffffff600000,
@@ -15,7 +15,7 @@ kernelMemoryPlot <- function(xValues) {
 	0xffff800000000000,
 	0x0000800000000000,
 	0x0000000000000000)
-	upperBound <- rep(0,length(lowerBounds))
+	upperBound <- rep(0,length(lowerBound))
 
 	areaName <- c(
 	"hole",
@@ -58,16 +58,36 @@ kernelMemoryPlot <- function(xValues) {
 	upperBound[1] <- 0xffffffffffffffff
 
 	jpeg("plot.jpg")
-	plot(range(xValues),c(1,0),type="n")
-	for(i in seq(1,length(lowerBounds))) {
-		lines(c(lowerBound[i],upperBound[i]),c(i*0.1,i*0.1))
 
+	if(missing(optionalUpperBound)) {
+		printRange <- range(linesToPlot)
+	} else {
+		printRange <- range(linesToPlot,optionalUpperBound)
+	}
+
+	plot(printRange,c(1,0),type="n",xlab="Memory region",ylab="",yaxt="n")
+	for(i in seq(1,length(lowerBound))) {
 		xvalues <- c(lowerBound[i],upperBound[i],upperBound[i],lowerBound[i])
 		yvalues <- c(0,0,1,1)
 
 		polygon(xvalues,yvalues,density=-1,col=areaColor[i])
 	}
+
+	if(missing(optionalUpperBound)) {
+		for(i in seq(1,length(linesToPlot))) {
+			lines(c(linesToPlot[i],linesToPlot[i]),c(0,1))
+		}
+	} else {
+		for(i in seq(1,length(linesToPlot))) {
+			xvalues <- c(linesToPlot[i],optionalUpperBound[i],optionalUpperBound[i],linesToPlot[i])
+			yvalues <- c(0,0,1,1)
+			
+			polygon(xvalues,yvalues,density=-1,col="blue")
+		}
+	}
 	dev.off()
 }
 
-
+syscalls <- read.table('syscalls')
+modules <- read.table('modules')
+kernelMemoryPlot(modules$V1,modules$V2)
